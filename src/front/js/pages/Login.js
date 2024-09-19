@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom';
 import "../../styles/home.css";
 
 const Login = () => {
-  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
 
@@ -16,7 +15,7 @@ const Login = () => {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({password }),
       });
 
       const data = await response.json();
