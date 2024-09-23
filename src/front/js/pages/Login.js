@@ -1,30 +1,31 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
-import "../../styles/home.css";
+import { Link, useNavigate } from 'react-router-dom'; 
+import "../../styles/home.css"; 
 
 const Login = () => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const navigate = useNavigate(); 
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     try {
-      const response = await fetch('http://localhost:5000/api/login', {
+      const response = await fetch(process.env.BACKEND_URL + '/api/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({password }),
+        body: JSON.stringify({ password }),
       });
 
       const data = await response.json();
 
       if (response.ok) {
         localStorage.setItem('token', data.token); 
-        alert('Inicio de sesión exitoso');
         setError('');
-        window.location.href = '/PerfilUsuario';
+        alert('Inicio de sesión exitoso');
+        navigate('/PerfilUsuario');
       } else {
         setError(data.msg || 'Credenciales incorrectas');
       }

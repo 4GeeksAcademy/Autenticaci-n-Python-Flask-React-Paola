@@ -1,82 +1,70 @@
 """
 This module takes care of starting the API Server, Loading the DB and Adding the endpoints
 """
-from flask import Flask, request, jsonify, url_for, Blueprint
-from api.models import db, User
-from flask_login import LoginManager, login_user
-from config import Config
-from api.utils import generate_sitemap, APIException
-from flask_cors import CORS
-from flask_migrate import Migrate
-from flask_jwt_extended import create_access_token, get_jwt_identity, jwt_required
+from flask import Blueprint, request, jsonify
+from flask_jwt_extended import jwt_required
+from api.models import db, Contact
 
- 
+contacts_bp = Blueprint('contacts', __name__)
+
 api = Blueprint('api', __name__)
-CORS(api)
 
+@api.route('/some-route', methods=['GET'])
+def some_route():
+    return "Hello from API"
 
-
-login_manager = LoginManager(api)
-login_manager.login_view = 'login'
-
-@login_manager.user_loader
-def load_user(user_id):
-    return User.query.get(int(user_id))
-
-# Allow CORS requests to this API
-@api.route('/users', methods=['GET'])
+@contacts_bp.route('/contacts', methods=['GET'])
 @jwt_required()
-def get_users():
-    users = User.query.all()
-    users = list(map(lambda user: user.serialize(), users))
-    return jsonify(users), 200
+def get_contacts():
+    contacts = Contact.query.all()
+    return jsonify([contact.serialize() for contact in contacts]), 200
 
-@api.route('/user/<int:id>', methods=['PUT'])
+@contacts_bp.route('/contacts/<int:id>', methods=['GET'])
 @jwt_required()
-def edit_user(id):
-    request_body = request.json
-    user = User.query.get(id)
-    if user is None:
-        return jsonify({"msg": "User not found"}), 404
+def get_contact(id):
+    contact = Contact.query.get(id)
+    if not contact:
+        return jsonify({"msg": "Contact not found"}), 404
+    return jsonify(contact.serialize()), 200
 
-    if "name" in request_body:
-        user.name = request_body["name"]
-    if "last_name" in request_body:
-        user.last_name = request_body["last_name"]
+@contacts_bp.route('/contacts', methods=['POST'])
+@jwt_required()
+def create_contact():
+    data = request.json
+    name = data.get('name')
+    phone = data.get('phone')
+    email = data.get('email')
+
+    if not name or not phone:
+        return jsonify({"msg": "Name and phone are required"}), 400
+
+    new_contact = Contact(name=name, phone=phone, email=email)
+    db.session.add(new_contact)
+    db.session.commit()
+    return jsonify(new_contact.serialize()), 201
+
+@contacts_bp.route('/contacts/<int:id>', methods=['PUT'])
+@jwt_required()
+def update_contact(id):
+    contact = Contact.query.get(id)
+    if not contact:
+        return jsonify({"msg": "Contact not found"}), 404
+
+    data = request.json
+    contact.name = data.get('name', contact.name)
+    contact.phone = data.get('phone', contact.phone)
+    contact.email = data.get('email', contact.email)
 
     db.session.commit()
+    return jsonify(contact.serialize()), 200
 
-    return jsonify({"msg": "User updated", "user": user.serialize()}), 200
-
-@api.route('/user/<int:id>', methods=['DELETE'])
+@contacts_bp.route('/contacts/<int:id>', methods=['DELETE'])
 @jwt_required()
-def delete_user():
-    user = User.query.get(id)
-    if user is None:
-        return jsonify({"msg": "User not found"}), 404
+def delete_contact(id):
+    contact = Contact.query.get(id)
+    if not contact:
+        return jsonify({"msg": "Contact not found"}), 404
 
-    db.session.delete(user)
+    db.session.delete(contact)
     db.session.commit()
-
-    return jsonify({"msg": "User deleted"}), 200
-
-@api.route('/register', methods=['POST'])
-@jwt_required()
-def register():
-    data_user = request.json
-    user = User()
-    new_user = user.create_user( password=data_user["password"])
-    print(new_user)
-    return jsonify({"msg": "Your registration has been successful, congratulations!"})
- 
-@api.route('/login', methods=['POST'])
-@jwt_required()
-def login(): 
-    data_user = request.json
-    user = User()
-    if user and user.check_password(password=data_user["password"]):
-        access_token = create_access_token(identity=user.serialize())
-        return jsonify({"token": access_token, "msg": "WELCOME!"})
-    else:
-        return jsonify({"msg": "Invalid email or password"}), 401
-    return jsonify(response_body), 200
+    return jsonify({"msg": "Contact deleted"}), 200
