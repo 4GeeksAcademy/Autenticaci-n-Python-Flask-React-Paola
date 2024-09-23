@@ -5,18 +5,15 @@ from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required
 from api.models import db, Contact
 
-# Crear el blueprint para contactos
 contacts_bp = Blueprint('contacts', __name__)
 api = Blueprint('api', __name__)
 
-# Obtener todos los contactos (requiere autenticación)
 @contacts_bp.route('/contacts', methods=['GET'])
 @jwt_required()
 def get_contacts():
     contacts = Contact.query.all()
     return jsonify([contact.serialize() for contact in contacts]), 200
 
-# Obtener un contacto específico por ID (requiere autenticación)
 @contacts_bp.route('/contacts/<int:id>', methods=['GET'])
 @jwt_required()
 def get_contact(id):
@@ -25,7 +22,6 @@ def get_contact(id):
         return jsonify({"msg": "Contact not found"}), 404
     return jsonify(contact.serialize()), 200
 
-# Crear un nuevo contacto (requiere autenticación)
 @contacts_bp.route('/contacts', methods=['POST'])
 @jwt_required()
 def create_contact():
@@ -42,7 +38,6 @@ def create_contact():
     db.session.commit()
     return jsonify(new_contact.serialize()), 201
 
-# Actualizar un contacto existente (requiere autenticación)
 @contacts_bp.route('/contacts/<int:id>', methods=['PUT'])
 @jwt_required()
 def update_contact(id):
@@ -58,7 +53,7 @@ def update_contact(id):
     db.session.commit()
     return jsonify(contact.serialize()), 200
 
-# Eliminar un contacto (requiere autenticación)
+
 @contacts_bp.route('/contacts/<int:id>', methods=['DELETE'])
 @jwt_required()
 def delete_contact(id):
