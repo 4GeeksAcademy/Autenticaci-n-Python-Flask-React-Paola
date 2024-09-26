@@ -10,6 +10,7 @@ class User(db.Model):
     last_name = db.Column(db.String(80), nullable=True)
     password = db.Column(db.String(80), unique=True, nullable=False)
     is_active = db.Column(db.Boolean(), unique=False, nullable=False)
+    contacts = db.relationship('Contact', backref='user', lazy=True)
 
     def __repr__(self):
         return f'<User {self.name}>'
@@ -35,23 +36,28 @@ class User(db.Model):
             "id": self.id,
             'name': self.name,
             'last_name': self.last_name,
-            'is_active': self.is_active
-            # No serializar la contraseña por seguridad
+            'is_active': self.is_active,
+            'contacts': [contact.serialize() for contact in self.contacts]  
         }
 
 class Contact(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(50), nullable=False)
+    full_name = db.Column(db.String(100), nullable=False)  
     phone = db.Column(db.String(20), nullable=False)
     email = db.Column(db.String(100), nullable=True)
+    address = db.Column(db.String(200), nullable=True)  
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
 
     def __repr__(self):
-        return f'<Contact {self.name}>'
+        return f'<Contact {self.full_name}>' 
 
     def serialize(self):
         return {
             "id": self.id,
-            "name": self.name,
+            "full_name": self.full_name,  
             "phone": self.phone,
-            "email": self.email
+            "email": self.email,
+            "address": self.address, 
+            "user_id": self.user_id
         }
+
