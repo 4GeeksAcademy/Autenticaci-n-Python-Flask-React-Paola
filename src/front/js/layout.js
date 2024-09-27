@@ -7,7 +7,7 @@ import injectContext from "./store/appContext";
 import { Navbar } from "./component/navbar";
 import { ListCard } from "./views/ListCard";
 import { Form } from "./views/form";
-import { Login } from "./views/Login";
+import  Login from "./views/Login";
 
 const Layout = () => {
   const basename = process.env.BASENAME || "";

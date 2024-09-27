@@ -6,38 +6,40 @@ bcrypt = Bcrypt()
 
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(80), nullable=True)
-    last_name = db.Column(db.String(80), nullable=True)
-    password = db.Column(db.String(80), unique=True, nullable=False)
-    is_active = db.Column(db.Boolean(), unique=False, nullable=False)
+    name = db.Column(db.String(80), nullable=False)  # Obligatorio
+    last_name = db.Column(db.String(80), nullable=True)  # Opcional
+    password = db.Column(db.String(80), nullable=False)  # Obligatorio
     contacts = db.relationship('Contact', backref='user', lazy=True)
+    is_active = db.Column(db.Boolean(), unique=False, nullable=False)
 
     def __repr__(self):
         return f'<User {self.name}>'
-
+    
     def generate_password(self, password):
         return bcrypt.generate_password_hash(password)
-
+    
     def check_password(self, password):
         return bcrypt.check_password_hash(self.password, password)
 
-    def create_user(self, password, is_active=True):
+    def create_user(self, name, last_name, password, is_active=True):
         hashed_password = self.generate_password(password).decode('utf-8')
         new_user = User(
+            name=name,
+            last_name=last_name,
             password=hashed_password,
-            is_active=is_active
+            is_active=is_active  
         )
         db.session.add(new_user)
         db.session.commit()
         return new_user
-
+        
     def serialize(self):
         return {
             "id": self.id,
-            'name': self.name,
-            'last_name': self.last_name,
-            'is_active': self.is_active,
-            'contacts': [contact.serialize() for contact in self.contacts]  
+            "name": self.name,
+            "last_name": self.last_name,
+            'is_active': self.is_active
+            # do not serialize the password, i ts a security breach
         }
 
 class Contact(db.Model):
@@ -49,7 +51,19 @@ class Contact(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
 
     def __repr__(self):
-        return f'<Contact {self.full_name}>' 
+        return f'<Contact {self.full_name}>'
+
+    def new_contact(self, full_name, phone, email, address, user_id):
+        new_contact = Contact(
+            full_name=full_name,
+            phone=phone,
+            email=email,  
+            address=address,
+            user_id=user_id 
+        )
+        db.session.add(new_contact)
+        db.session.commit()
+        return new_contact 
 
     def serialize(self):
         return {
@@ -60,4 +74,3 @@ class Contact(db.Model):
             "address": self.address, 
             "user_id": self.user_id
         }
-

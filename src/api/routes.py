@@ -13,7 +13,6 @@ CORS(api)
 def login():
     email = request.json.get("email", None)
     password = request.json.get("password", None)
-
     user = User.query.filter_by(email=email).first()
 
     if user is None:
@@ -21,7 +20,7 @@ def login():
     if not user.check_password(password):
         return jsonify({"msg": "Incorrect password"}), 401
 
-    access_token = create_access_token(identity=user.id) 
+    access_token = create_access_token(identity=user.id)
     return jsonify(access_token=access_token)
 
 @api.route('/contacts', methods=['GET'])
@@ -58,7 +57,7 @@ def create_contact():
         phone=phone, 
         email=email, 
         address=address, 
-        user_id=user_id
+        user_id=user_id  
     )
     db.session.add(new_contact)
     db.session.commit()
