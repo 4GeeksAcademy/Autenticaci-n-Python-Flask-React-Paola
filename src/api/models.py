@@ -6,9 +6,9 @@ bcrypt = Bcrypt()
 
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(80), nullable=False)  # Obligatorio
-    last_name = db.Column(db.String(80), nullable=True)  # Opcional
-    password = db.Column(db.String(80), nullable=False)  # Obligatorio
+    name = db.Column(db.String(80), nullable=False)  
+    last_name = db.Column(db.String(80), nullable=True)  
+    password = db.Column(db.String(80), nullable=False)  
     contacts = db.relationship('Contact', backref='user', lazy=True)
     is_active = db.Column(db.Boolean(), unique=False, nullable=False)
 
